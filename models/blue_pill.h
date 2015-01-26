@@ -1,21 +1,39 @@
 #ifndef blue_pill_h__
 #define blue_pill_h__
 
-#define DATA_PIN   PIND
+#define DELAY_US   4
+
+#define DATA_PIN   PINF
 #define DATA_BIT   _BIT7
 #define READ_KEY   (DATA_PIN & DATA_BIT) == 0
 
-#define LOAD_PORT  PORTD
-#define LOAD_BIT   _BIT5
+#define LOAD_PORT  PORTF
+#define LOAD_BIT   _BIT6
 #define LOAD_LOW   LOAD_PORT &= ~LOAD_BIT
 #define LOAD_HIGH  LOAD_PORT |=  LOAD_BIT
-#define LOAD_KEY_REGISTERS LOAD_LOW; _delay_us(4); LOAD_HIGH; _delay_us(4)
+#define LOAD_KEY_REGISTERS LOAD_LOW; _delay_us(DELAY_US); LOAD_HIGH; _delay_us(DELAY_US)
 
-#define CLOCK_PORT PORTD
-#define CLOCK_BIT  _BIT4
+#define CLOCK_PORT PORTF
+#define CLOCK_BIT  _BIT5
 #define CLOCK_DOWN CLOCK_PORT &= ~CLOCK_BIT
 #define CLOCK_UP   CLOCK_PORT |=  CLOCK_BIT
-#define SHIFT_KEY_DATA CLOCK_DOWN; _delay_us(4); CLOCK_UP; _delay_us(4)
+#define SHIFT_KEY_DATA CLOCK_DOWN; _delay_us(DELAY_US); CLOCK_UP; _delay_us(DELAY_US)
+
+#define ENABLE_PORT PORTF
+#define ENABLE_BIT  _BIT4
+#define ENABLE_LED  ENABLE_PORT &= ~ENABLE_BIT
+#define DISABLE_LED ENABLE_PORT |=  ENABLE_BIT
+
+#define LATCH_PORT PORTF
+#define LATCH_BIT  _BIT0
+#define LATCH_LOW  LATCH_PORT &= ~LATCH_BIT
+#define LATCH_HIGH LATCH_PORT |=  LATCH_BIT
+#define LATCH_LED  LATCH_LOW; _delay_us(DELAY_US); LATCH_HIGH; _delay_us(DELAY_US); LATCH_LOW
+
+#define LED_PORT PORTF
+#define LED_BIT  _BIT1
+#define LED_LOW  LED_PORT &= ~LED_BIT
+#define LED_HIGH LED_PORT |=  LED_BIT
 
 #define NUMBER_OF_KEYS 72
 
@@ -98,4 +116,32 @@
   NO,   NO,   NO \
 )
 
+#define TEST_A \
+{                                                                  \
+/*      0      1      2      3      4      5      6      7   */    \
+/* 0 */ KC_0, KC_0, KC_0, KC_0, KC_0, KC_0, KC_0, KC_0,    \
+/* 1 */ KC_1, KC_1, KC_1, KC_1, KC_1, KC_1, KC_1, KC_1,    \
+/* 2 */ KC_2, KC_2, KC_2, KC_2, KC_2, KC_2, KC_2, KC_2,    \
+/* 3 */ KC_3, KC_3, KC_3, KC_3, KC_3, KC_3, KC_3, KC_3,    \
+/* 4 */ KC_4, KC_4, KC_4, KC_4, KC_4, KC_4, KC_4, KC_4,    \
+/* 5 */ KC_5, KC_5, KC_5, KC_5, KC_5, KC_5, KC_5, KC_5,    \
+/* 6 */ KC_6, KC_6, KC_6, KC_6, KC_6, KC_6, KC_6, KC_6,    \
+/* 7 */ KC_7, KC_7, KC_7, KC_7, KC_7, KC_7, KC_7, KC_7,    \
+/* 8 */ KC_8, KC_8, KC_8, KC_8, KC_8, KC_8, KC_8, KC_8     \
+}
+#define TEST_B \
+{                                                                  \
+/*      0      1      2      3      4      5      6      7   */    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+/* 0 */ KC_0, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7,    \
+}
+
 #endif
+

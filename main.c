@@ -49,7 +49,7 @@ void poll_timer_disable(void);
 int main(void) {
   init();
   poll_timer_enable();
-  for(;;);
+  for(;;) { }
 }
 
 
@@ -73,12 +73,7 @@ ISR(TIMER0_COMPA_vect) {
     key[k].bounce <<= 1;
   }
 
-//  for(uint8_t k=0; k<72; k++)
-//    if(key[k].is_pressed)
-//      print("1");
-//    else
-//      print("0");
-//  print("\n");
+  //  for(uint8_t k=0; k<72; k++) print(key[k].is_pressed? "1", "0"); print("\n");
 
   update_leds();
   poll_timer_enable();
@@ -119,7 +114,7 @@ void key_release(uint8_t k) {
   send();
 }
 
-
+uint16_t grayscale[24] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 // 2 = scroll lock, 1 = caps lock, 0 = num lock.
 void update_leds() {
   /*
@@ -129,17 +124,41 @@ void update_leds() {
     Clock     D4 // Clock signal
     Load      D5 // Load key data into shift registers, active low
     Key data  D7 // Data pin for serial key values
-   */
-}
+  */
 
+  grayscale[9]  = keyboard_leds & 0b00000001? 0xffff: 0x0000;
+  grayscale[10] = keyboard_leds & 0b00000010? 0xffff: 0x0000;
+  grayscale[11] = keyboard_leds & 0b00000100? 0xffff: 0x0000;
+  
+  uint16_t counter = 0;
+  LATCH_LOW;
+  for(uint8_t j=23; j<255; j--) {
+    for(uint16_t mask=0b0000100000000000; mask>0; mask>>=1) {
+      CLOCK_DOWN;
+        //      if(mask&grayscale[9])
+      if(mask&grayscale[j])
+        LED_HIGH;
+      else
+        LED_LOW;
+      CLOCK_UP;
+      counter++;
+    }
+  }
+  phex16(counter); print("\n");
+
+  CLOCK_DOWN;
+  LATCH_HIGH;
+  _delay_us(DELAY_US);
+  LATCH_LOW;
+}
 
 void init(void) {
   usb_init();
   while(!usb_configured());
   CPU_PRESCALE(0);
-  MCUCR |= 0x80; MCUCR |= 0x80;
-  DDRD  = 0b01111111;
-  PORTD = 0b11111111;
+  MCUCR |= 0x80; MCUCR |= 0x80;   // Disable JTAG
+  DDRF  &= 0b01111111;  DDRF  |= 0b01110011;
+  PORTF |= 0b11110011;
   TCCR0A |=      // Timer0 control register A: timer mode
     (1<<WGM01);  // Set CTC, clear timer on compare
   TCCR0B |=      // Timer0 control register B: step frequency
@@ -149,6 +168,7 @@ void init(void) {
   mod_keys = 0;
   for(uint8_t k = 0; k < NUMBER_OF_KEYS; k++)
     key[k].bounce = key[k].is_pressed = false;
+  ENABLE_LED;
   sei();
 }
 void poll_timer_enable(void) {

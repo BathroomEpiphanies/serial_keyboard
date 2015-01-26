@@ -6,6 +6,7 @@
 ## Keyboard models. Un-comment the options you want.
 
 MODEL = blue_pill
+#LAYOUT = TEST_A
 LAYOUT = FREDRIK
 STR_MANUFACTURER = L\"Bathroom\ Epiphanies\ -\"
 STR_PRODUCT = L\"Blue\ Pill\"
