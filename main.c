@@ -37,7 +37,6 @@ struct {bool is_pressed;     uint8_t bounce;} key[NUMBER_OF_KEYS];
 uint8_t queue[7] = {255, 255, 255, 255, 255, 255, 255};
 uint8_t mod_keys = 0;
 
-void scan_keys(void);
 void send(void);
 void key_press(uint8_t k);
 void key_release(uint8_t k);
@@ -46,17 +45,32 @@ void init(void);
 void poll_timer_enable(void);
 void poll_timer_disable(void);
 
+/* Main function.
+   Initialize, enable timer interrupt polling, and let be..
+ */
 int main(void) {
   init();
   poll_timer_enable();
   for(;;) { }
 }
 
+/* Timer interrupt based polling for key statuses and updating LEDs.
 
+   Key statuses are loaded asynchronously into the shift registers
+   when LOAD is held low. They are then shifted out (TODO: in which
+   order?) on a LOW-to-HIGH transition of the clock.
+
+   Debouncing is done by trying to detect plausible off-on and on-off
+   transitions in  key status over the last 7 reads.
+
+   TODO:
+   Optimize method and delay times
+   Insert elsewhere defined stuff
+*/
 ISR(TIMER0_COMPA_vect) {
   poll_timer_disable();
   
-  LOAD_KEY_REGISTERS;
+  LOAD_KEY_REGISTERS;             // Asyncronous load of key statuses into shift registers
   for(int j=0, k=0; j<9; j++) {
     for(int i=0; i<8; i++, k++) {
       key[k].bounce |= READ_KEY;  // Read keys
@@ -73,13 +87,14 @@ ISR(TIMER0_COMPA_vect) {
     key[k].bounce <<= 1;
   }
 
-  //  for(uint8_t k=0; k<72; k++) print(key[k].is_pressed? "1", "0"); print("\n");
+  //for(uint8_t k=0; k<72; k++) print(key[k].is_pressed? "1", "0"); print("\n");   // Debug print of key statuses
 
   update_leds();
   poll_timer_enable();
 }
 
-
+/* Registering key presses and releases, and sending to the host.
+*/
 void send(void) {
   uint8_t i;
   for(i = 0; i < 6; i++)
@@ -114,37 +129,43 @@ void key_release(uint8_t k) {
   send();
 }
 
-uint16_t grayscale[24] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-// 2 = scroll lock, 1 = caps lock, 0 = num lock.
-void update_leds() {
-  /*
-    LED data  D0 // Data pin for serial LED data
-    Blank     D2 // Disable LED output, active high
-    Latch     D3 // Latch LED data to driver
-    Clock     D4 // Clock signal
-    Load      D5 // Load key data into shift registers, active low
-    Key data  D7 // Data pin for serial key values
-  */
+/* Updating LEDs
 
+   Keyboard status LEDs are received and stored in the variable
+   keyboard_leds 
+
+   keyboard_leds[bit]: 2 = scroll lock, 1 = caps lock, 0 = num lock.
+
+   Keyboard LEDs are numbered on the PCB. Cathodes are on the end
+   where the labels are.
+
+   The LED driver stores 24 12-bit gray scale values. The high bit of
+   the 24th LED needs to be sent first.
+   
+   TODO:
+   Break sending 12-bit grayscale values out to separate function.
+   LEDs sometimes seem to flicker, find out why.
+   Only send new LED data when changed, perhaps.
+   Optimize - method and delay times.
+   Insert elsewhere defined stuff
+*/
+uint16_t grayscale[24] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+void update_leds() {
   grayscale[9]  = keyboard_leds & 0b00000001? 0xffff: 0x0000;
   grayscale[10] = keyboard_leds & 0b00000010? 0xffff: 0x0000;
   grayscale[11] = keyboard_leds & 0b00000100? 0xffff: 0x0000;
   
-  uint16_t counter = 0;
   LATCH_LOW;
   for(uint8_t j=23; j<255; j--) {
     for(uint16_t mask=0b0000100000000000; mask>0; mask>>=1) {
       CLOCK_DOWN;
-        //      if(mask&grayscale[9])
       if(mask&grayscale[j])
         LED_HIGH;
       else
         LED_LOW;
       CLOCK_UP;
-      counter++;
     }
   }
-  phex16(counter); print("\n");
 
   CLOCK_DOWN;
   LATCH_HIGH;

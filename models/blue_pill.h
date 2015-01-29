@@ -1,6 +1,19 @@
 #ifndef blue_pill_h__
 #define blue_pill_h__
 
+/*
+  Latch         F0 // Latch LED data to driver
+  LEDs data     F1 // Data pin for serial LED data
+  Enable(Blank) F4 // Disable LED output, active high
+  Clock         F5 // Clock signal
+  Load          F6 // Load key data into shift registers, active low
+  Keys          F7 // Data pin for serial key values
+
+  TODO:
+  Inline definitions where they are used (most often only a sigle
+  location).
+*/
+
 #define DELAY_US   4
 
 #define DATA_PIN   PINF
@@ -116,6 +129,7 @@
   NO,   NO,   NO \
 )
 
+/* Layouts for testing purposes. */
 #define TEST_A \
 {                                                                  \
 /*      0      1      2      3      4      5      6      7   */    \
